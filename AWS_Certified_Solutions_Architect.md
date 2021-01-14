@@ -425,3 +425,153 @@
   - Creates Mount Poimts in all your VPC subnets so you can mount from anywhere within your VPC.
   - Provides Read After Write Consistency.
 
+## Elastic Block Store (EBS)
+  - EBS is a virtual hard disk. Snapshots are a point-in-time copy of that disk.
+  - Volumes exist on EBS. Snapshots exist on S3.
+  - Snapshots ar incremental, only changes made since the last snapshot are moved to S3.
+  - Initial Snapshots of an EC2 instance will take longer to create than subsequent Snapshots.
+  - If taking a Snapshot of a root Volume, the EC2 instance should be stopped before Snapshotting.
+  - Although you can take Snapshots while the instance is still running.
+  - You can create AMIs from Volumes, or from Snapshots.
+  - **EBS Volumes** are a durable, block-level storage device that you can attach to a single EC2 instance.
+  - **EBS Volumes** can be modified on the fly, e.g. storage type or volume size.
+  - Volumes always exist in the same AZ as the EC2 instance.
+  - **Instance Store Volumes** are a temporary storage type located on disks that are physically attached to a host machine.
+  - **Instance Store Volumes** are ephemeral and cannot be stopped. If the host fails then you lose your data.
+  - EBS Backed Instances can be stopped and you will not lose any data.
+  - By default root volumes are deleted on termination of the EC2.
+  - **EBS Volumes** can have termination protection (don't delete the volume on termination).
+  - Snapshots or restored encrypted volumes will also be encrypted.
+  - You cannot share a snapshot if it has been encrypted.
+  - Unencrypted snapshots can be shared with other AWS accounts or made public.
+
+## CloudFront
+  - CloudFront is a Content Distribution Network (CDN) that helps websites load faster by serving cached content to nearby locations.
+  - CloudFront distributes cached copy at **Edge Locations**.
+  - Edge Locations aren't just not read-only, you can write to them (i.e. PUT objects).
+  - Time To Live (TTL) is a variable that defines how long until the cache expires (refreshes data).
+  - When you invalidate your cache, you are forcing it to immediately expire (refreshes cached data).
+  - Refreshing the cache **costs money because of transfer costs** to update Edge Locations.
+  - **Origin** is the address of where the original copies of your files reside (e.g. S3, EC2, ELB, Route53).
+  - **Distribution** defines a collection of Edge Locations and behaviour on how they should handle your cached content.
+  - **Distributions** has two types: **Web Distirbution** (for static website content) and **RTMP** (for streaming media).
+  - **Origin Identity Access (OAI)** is used to access private S3 buckets.
+  - Access to cached content can be protected via **Signed URLs** or **Signed Cookies**.
+  - **Lambda@Edge** allows you to pass each request through a Lambda to change the behaviour of the response.
+
+## Relational Database Service (RDS)
+  - RDS is the AWS Solution for relational databases.
+  - RDS Instances are managed by AWS, you cannot SSH into the VM running the database.
+  - There are 6 relational database options currently available on AWS, Aurora, MySQL, MariaDB, Postres, Oracle, Microsoft SQL Server.
+  - Multi-AZ is an option you can turn on which makes an exact copy of your database in another AZ that is only standby.
+  - For Multi-AZ AWS automatically synchronizes changes in the database over to the standby slave will be promoted to master.
+  - Read-Replicas allow you to run **multiple copies** of your database, these copies allow more read traffic by sharing the load with the primary, but writes go exclusively to the primary and are then disseminated to the replicas.
+  - Read-Replicas use Asynchronous replication, i.e. they are not perfectly in-sync with the primary, the writes are replicated when the primary has a free moment to disseminate them.
+  - You must have automatic backups enabled to use Read Replicas.
+
+## Aurora Database
+  - When you need a **fully-managed** Postgres or MySQL database that needs to scale, automatic backups, high availability, and fault tolerance *think* Aurora.
+  - Aurora can run MySQL or Postgres database engines.
+  - Aurora MySQL is 5 times faster over regular MySQL.
+  - Aurora Postgres is 3 times faster over regular Postgres.
+  - Aurora is 1/10th the cost over its competitors with similar performance and availability options.
+  - Aurora replicates **6 copies** for your database across **3 Availability Zones**.
+  - Aurora is allowed up to **15 Aurora Replicas**
+  - An Aurora database can span multiple regions via **Aurora Global Database**.
+  - *Aurora Serverless** allows you to stop and start Aurora and scale automatically while keeping costs low.
+  - Aurora Serverless is ideal for new projects or projects with infrequent database usage.
+
+## Redshift
+  - Redshift is an AWS managed, petabyte-scale data warehousing solution leveraging columnar storage efficiencies.
+  - Redshift's most common use case is Business Intelligence.
+  - A Data Wharehouse is built to store large quantities of historical data and enable fast, complex SQL-like queries across all of the data using an Online Analytical Processing (OLAP).
+  - Compared to databases which are most useful for single source transactions, like adding items to a shopping list, data warehouses are best used for generating large-scale reports about production and usage combining data from multiple sources.
+  - Data can be loaded from S3, EMR, DynamoDB, or multiple data sources on remote hosts.
+  - Comes in two Configurations: Single Node and Multi-Node.
+    - **Single Node** comes in sizes of 160 GB and is a good way to begin using Redshift.
+    - **Multi-Node** launches a cluster of nodes with one **Leader Node**, which manages client connections and receiving queries, and up to 128 **Compute Nodes**, which store data and perform query tasks. You set a minimum and maximum number of compute nodes desired.
+  - Nodes come in two types: **Dense Compute (dc)**, which are best for high performance loads, and **Dense Storage (ds)**, which is best for holding large amounts of data.
+  - Redshift uses a Massively Parallel Processing (MPP) algorithm to distribute queries and data across all available nodes/clusters.
+  - Redshift uses **multiple compression techniques** to achieve significant compression relative to traditional relational data stores.
+  - When loading data to an empty table, data is **sampled** and the best compression **scheme is selected automatically**.
+  - Redshift usage is billed by the total number of hours run across all nodes, 1 unit per node per hour, not including the leader node.
+    - So, for example, if you had one leader node and one compute node running, you would only be charged for compute node hours.
+  - **Security**: In-transit security provided by using SSL; at-rest encryption with AES-256 which can be applied using either KMS or CloudHSM.
+  - **Availability**: Redshift is Single-AZ. To run Multi-AZ you have to spin up clusters in each desired AZ with cloned data.
+  - Redshift can asynchronously back up your snapshot to another Region by using S3, which can be used to run parallel/back-up clusters.
+  - Redshift attempts to backup 3 copies of your data: the original, spread on the compute nodes, and on S3.
+  - Backup Retention is by default set to 1 day but can be increased to a maximum of 35 days.
+
+## DynamoDB
+  - A key-value and document database (NoSQL) which can guarantee **consistent reads and writes** at any scale.
+    - NoSQL is a database which is neither relational nor does it use SQL to query the data for results.
+  - Features:
+    - Fully-managed
+    - Multiregion
+    - Multimaster
+    - Durable
+    - Built-in Security
+    - Backup and Restore
+    - In-memory caching
+  - Provides: Eventually Consistent Reads (default) or Strongly Consistent Reads
+    - Eventually Consistent Reads: When copies are being updated, it is possible to read from a copy before it has had an update applied, leading to inconsistency, but reads are pretty much immediate. Consistency should happen between copies within a second.
+    - Strongly Consistent Reads: When updates are queued, data cannot be read, causing higher latency (slower reads), but consistency is guaranteed. All copies should get consistent within a second.
+  - All data is stored on SSD storage and is spread across 3 different regions.
+  - Terminology:
+    - Primary Key = Partition Key (unique) and Sort Key
+    - Row = Item
+    - Field = Attribute
+
+## CloudFormation
+  - When being asked to **automate** the provisioning of resources *think* CloudFormation.
+  - When Infrastructure as Code (IaC) is mentioned *think* CloudFormation.
+  - CloudFormation files can be written in either JSON or YAML.
+  - When CloudFormation encounters an error it will rollback with **ROLLBACK_IN_PROGRESS**.
+  - CloudFormation templates larger than 51,200 bytes (0.05 MB) are too large to upload directly and must therefore be imported into CloudFormation via an S3 bucket.
+  - **NestedStacks** helps you break up your CloudFormation template into smaller, reusable templates that can be composed into larger templates.
+  - **At least one resource** under resources must be definied for a CloudFormation template **to be valid**.
+  - **MetaData** is extra information about your template.
+  - **Description** is a description of what the template is supposed to do.
+  - **Parameters** is how you get user inputs into templates.
+  - **Transforms** apply macros (like applying a mod which changes the anatomy of the template to be custom).
+  - **Outputs** are values you can use to import into other stacks.
+  - **Mappings** are used to map keys to values, just like a lookup table.
+  - **Resources** define the resources you want to provision (i.e. what kind of server or service you're requesting), **at least one resource is required** for a template to be valid (otherwise you're not requesting anything!).
+  - **Conditions** are logical tests to determine whether resources are created or properties are assigned.
+
+## CloudWatch
+  - CloudWatch is a collection of monitoring services for logging, reacting, and visualizing log data.
+  - EC2 monitors at 5 minute intervals by default and at 1 minute intervals in Detailed Monitoring.
+  - Most other services monitor at 1 minute intervals 
+  - Monitoring tools include:
+    - **CloudWatch Logs**:        any custom log data, such as memory usage, rails logs, Nginx logs
+    - **CloudWatch Metrics**:     metrics that are based off of logs (e.g. memory usage)
+    - **CloudWatch Events**:      trigger an event based on a condition or on schedule (e.g. every hour take a snapshot of the server)
+    - **CloudWatch Alarms**:      trigger notifications based on metrics which breach a defined threshold
+    - **CloudWatch Dashboards**:  create visualizations based on metrics
+  - **CloudWatch Logs**
+    - CloudWatch Logs is used to monitor, store, and access your log files.
+    - A **Log Group** is a collection of logs. Log files must belong to a Log Group.
+    - A Log in a Log Group is called a **Log Stream**.
+    - By default, logs are kept indefinitely and never expire.
+  - **CloudWatch Metrics**
+    - Represents a time-ordered set of data points as a variable monitor.
+    - CloudWatch comes with many *predefined** metrics (e.g. CPUUtilization, DiskReadOps, DiskWriteOps, DiskReadBytes, DiskWriteBytes, NetworkIn, NetworkOut, NetworkPacketsIn, NetworkPacketsOut).
+    - Custom metrics can be created using the AWS CLI or SDK.
+    - High resolution metrics (metrics measured <1 min) you must use custom metrics to define them. They can be down to 1 second intervals.
+  - **CloudWatch Events**
+    - Trigger an event based on a condition or on a schedule.
+    - **Event Source** how an event is triggered (e.g. schedule or event pattern).
+    - Schedule is like a serverless **Cron tab**.
+    - **Targets** what action you want triggered.
+  - **CloudWatch Alarms**
+    - Triggers a notification based on metrics which breach a defined threshold.
+    - **Type** can be either *static* (setting a threshold limit) or *anomaly detection* (define a band of normal values, alarm if the metric goes to high or low).
+    - **Condition** for static thresholds determines if you want an alarm when the metric is greater than, greater than or equal to, less than, or less than or equal to the threshold.
+    - **Threshold** the actual metric value you want to set as the threshold.
+  - **CloudWatch Dashboards**
+    - Create custom dashboards from CloudWatch metrics.
+  - **CloudWatch Agent**
+    - A script that can be installed on an EC2 via the Systems Manager Run Command to get more metrics from an EC2.
+      - e.g. memory utilization, disk swap utilization, disk space utilization, page file utilization, log collection
+
