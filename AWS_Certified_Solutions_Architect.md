@@ -544,34 +544,33 @@
   - EC2 monitors at 5 minute intervals by default and at 1 minute intervals in Detailed Monitoring.
   - Most other services monitor at 1 minute intervals 
   - Monitoring tools include:
-    - **CloudWatch Logs**:        any custom log data, such as memory usage, rails logs, Nginx logs
-    - **CloudWatch Metrics**:     metrics that are based off of logs (e.g. memory usage)
-    - **CloudWatch Events**:      trigger an event based on a condition or on schedule (e.g. every hour take a snapshot of the server)
-    - **CloudWatch Alarms**:      trigger notifications based on metrics which breach a defined threshold
-    - **CloudWatch Dashboards**:  create visualizations based on metrics
-  - **CloudWatch Logs**
-    - CloudWatch Logs is used to monitor, store, and access your log files.
-    - A **Log Group** is a collection of logs. Log files must belong to a Log Group.
-    - A Log in a Log Group is called a **Log Stream**.
-    - By default, logs are kept indefinitely and never expire.
-  - **CloudWatch Metrics**
-    - Represents a time-ordered set of data points as a variable monitor.
-    - CloudWatch comes with many *predefined** metrics (e.g. CPUUtilization, DiskReadOps, DiskWriteOps, DiskReadBytes, DiskWriteBytes, NetworkIn, NetworkOut, NetworkPacketsIn, NetworkPacketsOut).
-    - Custom metrics can be created using the AWS CLI or SDK.
-    - High resolution metrics (metrics measured <1 min) you must use custom metrics to define them. They can be down to 1 second intervals.
-  - **CloudWatch Events**
-    - Trigger an event based on a condition or on a schedule.
-    - **Event Source** how an event is triggered (e.g. schedule or event pattern).
-    - Schedule is like a serverless **Cron tab**.
-    - **Targets** what action you want triggered.
-  - **CloudWatch Alarms**
-    - Triggers a notification based on metrics which breach a defined threshold.
-    - **Type** can be either *static* (setting a threshold limit) or *anomaly detection* (define a band of normal values, alarm if the metric goes to high or low).
-    - **Condition** for static thresholds determines if you want an alarm when the metric is greater than, greater than or equal to, less than, or less than or equal to the threshold.
-    - **Threshold** the actual metric value you want to set as the threshold.
-  - **CloudWatch Dashboards**
-    - Create custom dashboards from CloudWatch metrics.
-  - **CloudWatch Agent**
-    - A script that can be installed on an EC2 via the Systems Manager Run Command to get more metrics from an EC2.
-      - e.g. memory utilization, disk swap utilization, disk space utilization, page file utilization, log collection
+    - **CloudWatch Logs**
+      - any custom log data, such as memory usage, rails logs, Nginx logs
+      - CloudWatch Logs is used to monitor, store, and access your log files.
+      - A **Log Group** is a collection of logs. Log files must belong to a Log Group.
+      - A Log in a Log Group is called a **Log Stream**.
+      - By default, logs are kept indefinitely and never expire.
+    - **CloudWatch Metrics**
+      - metrics that are based off of logs (e.g. memory usage)
+      - Represents a time-ordered set of data points as a variable monitor.
+    - CloudWatch comes with many *predefined** metrics (e.g. CPUUtilization, DiskReadOps, DiskWriteOps, DiskReadBytes, DiskWriteBytes, NetworkIn, NetworkOut, NetworkPacketsIn,   NetworkPacketsOut).
+      - Custom metrics can be created using the AWS CLI or SDK.
+      - High resolution metrics (metrics measured <1 min) you must use custom metrics to define them. They can be down to 1 second intervals.
+    - **CloudWatch Events**
+      - Trigger an event based on a condition or on a schedule (e.g. every hour take a snapshot of the server).
+      - **Event Source** how an event is triggered (e.g. schedule or event pattern).
+      - Schedule is like a serverless **Cron tab**.
+      - **Targets** what action you want triggered.
+    - **CloudWatch Alarms**
+      - Triggers a notification based on metrics which breach a defined threshold.
+      - **Type** can be either *static* (setting a threshold limit) or *anomaly detection* (define a band of normal values, alarm if the metric goes to high or low).
+      - **Condition** for static thresholds determines if you want an alarm when the metric is greater than, greater than or equal to, less than, or less than or equal to the threshold.
+      - **Threshold** the actual metric value you want to set as the threshold.
+    - **CloudWatch Dashboards**
+      - Create custom dashboards and visualizations from CloudWatch metrics.
+    - **CloudWatch Agent**
+      - A script that can be installed on an EC2 via the Systems Manager Run Command to get more metrics from an EC2.
+        - e.g. memory utilization, disk swap utilization, disk space utilization, page file utilization, log collection
 
+## CloudTrail
+  - 
