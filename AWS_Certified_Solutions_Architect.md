@@ -252,7 +252,7 @@
     - Java
     - Javascript
     - .NET
-    - NodeJs
+    - Node.js
     - PHP
     - Python
     - Ruby
@@ -573,4 +573,273 @@
         - e.g. memory utilization, disk swap utilization, disk space utilization, page file utilization, log collection
 
 ## CloudTrail
-  - 
+  - Logs API calls between AWS services. For when you need to know *who to blame*.
+  - CloudTrail is a service that enables **governance**, **compliance**, **operational auditing**, and **risk auditing** of your AWS accounts.
+  - CloudTrail helps easily identify which users and accounts made a call to AWS by providing:
+    - the source IP address from **where** the call was made
+    - the EventTime **when** the call happened
+    - the User or UserAgent **who** made the call
+    - and **what** Region, Resource, and Action were called
+  - CloudTrail automatically logs events by default for the **last 90 days** via **Event History**
+  - If you need more than 90 days you need to create a **Trail** which is output to S3 and will not have a GUI like Event History does (instead you'd use AWS Athena to search the Trail log).
+  - To ensure logs have not been tampered with you need to turn on the **Log File Validation** option.
+  - CloudTrail logs can be encrypted using the **AWS KMS** service.
+  - CloudTrail logs can be streamed to CloudWatch logs.
+  - CloudTrail logs two kinds of events: **Management Events** and **Data Events**.
+    - **Management Events** log management operations performed (e.g. AttachRolePolicy)
+    - **Data Events** log data operations for resources such as S3 and Lambda (e.g. GetObject, DeleteObject, and PutObject).
+    - Data events are **disabled** by default when creating a trail, since they are common occurences that could increase the cost of logging.
+  - Trail logs in S3 can be analyzed using Athena.
+
+## AWS Lambda
+  - Lambda allows users to run code without provisioning or managing servers, servers to run code are automatically started when triggered and stop once done.
+  - You only pay for the compute time you use, there is no charge when code is not running.
+  - Lambda is: **cheap**, **serverless**, and **scales automatically**
+  - Lambda natively supports 7 runtime languages: Ruby, Python, Java, Go, Powershell, Node.js, and C#
+  - It is also possible to create your own **custom runtime** environments for languages not listed above.
+  - Lambda is a good fit for short running tasks where you don't need to customize the OS environment. If you need long running tasks or custom OS environments then consider using **Fargate**.
+  - Use cases: Lambda is commonly used to **glue different services together** so the use cases are endless.
+    - E.g. Processing thumbnails: A web-service where users upload a picture, it's sent to an S3 bucket, that triggers a Lambda function that reduces the size of the image to thumbnail proportions, then stores that processed image in a thumbnails bucket (for easier listing in a gallery).
+    - E.g. Contact Mail Form: A user fills out a contact form on a website, that form is connected to an API Gateway Endpoint which, when something is submitted, triggers a Lambda function which process the contact form and files the data into a record_submission DynamoDB table and uses SNS to notify help desk that a form has been submitted.
+  - Lambdas can be invoked via the AWS SDK or triggered from other AWS services, such as:
+    - API Gateway
+    - AWS IoT
+    - Alexa Skills Kit
+    - ALB
+    - CloudFront
+    - CloudWatch Events
+    - CodeCommit
+    - Kinesis
+    - S3
+    - SNS
+    - etc.
+  - Lambdas can also be invoked from partner event sources through Amazon EventBridge, such as: Datadog, PagerDuty, Segment, SignalFx, SugarCRM, Whispir, Zendesk, etc.
+  - **Pricing**
+    - You pay per invocation (the **duration** and the amount of **memory** used) rounded to the nearest 100 milliseconds and based on the number of requests.
+    - The first **1 million requests** per month are free, $0.20 per additional million requests after.
+    - The first **400,00 GB seconds** free per month, $0.0000166667 per GB second after.
+    - Example: 128MB of memory x 30 million invocations per month x 200ms run time per execution = **$5.83**
+  - **Defaults and Limits**
+    - By default, you can have 1000 Lambdas running concurrently (although you can have that increased by asking AWS Support)
+    - /tmp directory on the limit can contain up to **500MB**
+    - By default, Lambdas run in No VPC, you can set them inside of your VPC but then the Lambda will lose internet access.
+    - You can set the timeout for a Lambda function, with a maximum of **15 minutes**
+    - Memory can be set between **128MB** (the default) and **3008MB** (the maximum).
+  - A **Cold Start** refers to an initial triggering of a Lambda function where it is necessary to initiate a server and copy over the Lambda code, which can cause a delay in the user experience.
+  - A **Warm Server** referes to the state of an already running and processing server that happens for any following calls to your Lambda function after a Cold Start has happened.
+
+## Simple Queue Service (SQS)
+  - Fully managed **queuing service** that enables you to decouple and scale microservices, distributed systems, and serverless applications.
+  - A messaging system is used to provide asynchronous communication and decouple processes via messages/events from a sender to a receiver (producer to consumer).
+  - Difference between queuing and streaming:
+    - Queuing services generally delete messages once they are consumed, consumers have to pull messages, they **require pulls** (no pushes), and they are **not for real-time** processing.
+      - Examples: SQS, Sidekiq, RabbitMQ
+    - Streaming services generally have it so that mulitple consumers can react to events, events live in streams for long periods of time, and they are used for **real-time** processing.
+      - Examples: Kinesis, Kafka, NATS
+  - SQS is for **application integration**
+  - **Limits and Retention**
+    - Message size can be between **1 byte** and **256 KB**
+    - There is an Extended Client Library for Java that allows messages larger than 256 KB (up to **2 GB**) by storing the message as an S3 object.
+    - Default message retention is **4 days**, but can be set between **1 minute** and **14 days**.
+  - **Queue Types**
+    - **Standard Queue** 
+      - Allows nearly-unlimited numbers of events per second.
+      - Guarantees that a message will be delivered **at least once**, meaning it could be delivered more than once.
+      - Provides **best-effort ordering** that tries to ensure a message is delivered in the same order that it was sent in.
+    - **First In, First Out (FIFO) Queue**
+      - Supports multiple ordered message groups winthin a single queue.
+      - Limited to 300 transactions per second.
+      - Other than these limits, FIFO queues have all the same capabilities as Standard Queues
+  - **Visibility Timeout**
+    - The amount of time after one consumer has picked up the message from the queue before other consumers can see it again, to help ensure that two consumers aren't  working on the same message redundantly.
+    - If a consumer finishes processing an event before the **visibility timeout** ends, then it is deleted from the queue, but if it takes too long, the event will return to the queue where  another consumer can pick it up, resulting in a "double delivery".
+    - Visibility timeout is set by default at **30 seconds** although it can be changed to anywhere between **0 seconds** to **12 hours**.
+  - **Polling**
+    - **Short Polling** is the default setting and it returns messages immediately, even if the message queue is empty.
+    - **Long Polling** waits until a message **arrives in the queue** or the **long poll timeout expires**
+    - Long polling makes it inexpensive to retrieve messages from your queue as soon as the messages are available.
+    - **In most use cases you will want to use long polling**.
+    - Set long polling within the SDK by using the .withWaitTimeSeconds() method on a RecieveMessageRequest() call.
+
+## Simple Notification Service (SNS)
+  - SNS allows you to **subscribe** and **send notifications** via text message, email, webhooks, lambdas, SQS, and mobile notifications.
+  - SNS is for **Application Integration**. It allows decoupled services and apps to communicate with each other.
+  - SNS is a highly available, durable, secure, fully managed pub/sub messaging service that enables you to **decouple** microservices, distributed systems, and serverless applications.
+  - SNS uses a pub/sub model to decouple publishers and subscribers through an Event Bus that groups messages into Topic channels.
+  - Messages are immediately **pushed** to subcribers, so they do not need to pull Topics for messages.
+  - **Topics** 
+    - allow users to group multiple subscriptions together.
+    - are able to deliver to multiple protocols at once (e.g. email, text message, HTTP(S)), protocol format is chosen by the subscriber.
+    - Topics can be encrypted via KMS
+  - **Subscriptions**
+    - Each subscription can only be for one topic and one protocol.
+    - Available protocols include:
+      - **HTTP and HTTPS** create webhooks into your web-applications
+      - **Email** good for internal email notifications (only supports plain text)
+      - **Email-JSON** sends you a JSON via email
+      - **Amazon SQS** places the SNS message into an SQS queue
+      - **AWS Lambda** triggers a Lambda function
+      - **SMS** sends a text message
+      - **Platform application endpoints** are mobile push notifications (e.g. Apple, Google, Microsoft Baidu)
+  - **Application as Subscriber** is a paradigm where the Platform application endpoint method is used to push events to applications.
+
+## ElastiCache
+  - Managed **caching** service which either runs Redis or Memcached
+  - Caching is the process of storing data in a cache and a cache is a **temporary storage** area. Caches are optimized for fast retrieval with the trade off that data is not durable.
+  - **In-Memory Data Store** is when data is stored in memory (i.e. RAM) which makes it extremely fast to retrieve/access but also risks data loss in the case of a fault.
+  - Elasticache can run either Redis or Memcached, two of the most popular open source caching engines.
+  - Frequently identical queries (i.e. queries you run often) are stored in the cache.
+  - ElastiCache is only accessible to resources operating wthin the same VPC to ensure low latency.
+  - **Caching Comparison**
+    - **Memcached** is generally prefered for caching HTML fragments. Memcahce is a simple key/value stores. The trade of to it being simple is that it is *very fast*.
+    - **Redis** can perform many different kinds of operations on your data and has richer data types. It's very good for leaderboards, geospatial data, or keeping track of unread notification data. It's very fast but *arguably* not as fast as Memcached.
+
+## Terminology: High Availability (HA)
+  - High Availability describes a system that is designed to remain available by avoiding failing due to internal faults.
+  - What could cause a service to become unavailable?
+    - When an AZ becomes unavailable (e.g. data center physically flooded)
+      - We should run our instances in Multi-AZ, an **Elastic Load Balancer** can route traffic to operational AZs.
+    - When a Region becomes unavaialbe (e.g. meteor strike [highly unlikely])
+      - We should run instances in another region. We can route traffic to another Region via **Route53**.
+    - When a web-application becomes unresponsive (e.g. too much traffic)
+      - We should use **Auto Scaling Groups** to increase the amount of instances to meet the demand of traffic.
+    - When an instance becomes unavailable (e.g. instance failure)
+      - We should use **Auto Scaling Groups** to ensure a minimum number of instances are running and have the **ELB** route traffic to healthy instances.
+    - When a web application becomes unresponsive due to distance between geographic locations
+      - We should use **CloudFront** to cache static content for faster delivery in nearby regions. We can also run our instances in nearby regions and route traffic using a geolocation policy in **Route53**
+
+## Terminology: Scale Up vs Scale Out
+  - **Scale Up** (vertical scaling): Increasing the size of instances
+    - Simpler to manage
+    - Lower availability (if a single instance fails, the service becomes unavailable)
+  - **Scale Out** (horizontal scaling): Adding more of the same
+    - More complexity to manage
+    - Higher availability (if a single instance fails, it doesn't take the whole service down)
+  - Generally you want to **scale out** and **then up** to balance complexity vs availability.
+
+## Elastic Beanstalk
+  - Quickly **deploy and manage** web-apps on AWS without worrying about infrastructure.
+  - **Elastic Beanstalk** handles the deployment, from capacity provisioning, load balancing, auto-scaling to application health monitoring.
+  - 'The Heroku of AWS'
+  - It costs nothing to us Elastic Beanstalk (just pay for the reources it provisions, e.g. RDS, ELB, EC2).
+  - Not recommended for "production" applications (this advice is aimed at enterprise, large companies).
+  - You can choose from the following preconfigured platforms: Java, .NET, PHP, Node.Js, Python, Ruby, Go, and Docker
+  - Elastic Beanstalk is powered by CloudFormation, it creates a template that sets up:
+    - Elastic Load Balancer
+    - Auto Scaling Groups
+    - RDS Database
+    - EC2 Instance preconfigured (or custom) platforms
+    - Monitoring (CloudWatch, SNS)
+    - In-Place and Blue/GReen deployment methodologies
+    - Security (rotates passwords)
+  - Elastic Beanstalk can run **Dockerized** environments
+
+## API Gateway
+  - Fully managed service to create, publish, maintain, monitor, and **secure APIs** to your cloud environment at **any scale**.
+  - Create APIs that act as a **front door** for applications to **access data**, **business logic**, or **functionality from back-end services**.
+  - API Gateway handles all the tasks involved in accepting and processing **up to hundreds of thousands of concurrent API calls**, including traffic management, authorization, and monitoring.
+  - API Gateway throttles API endpoints at **10,000** requests per second (can increase via service requests through AWS support)
+  - **Key Features**
+    - Allows you to track and control any usage of an API, such as throttling requests to help prevent attacks.
+    - Expose HTTPS endpoints to define a **RESTful API**
+    - Highly scalable (**happens automatically**) and is cost effective
+    - Send each API endpoint to a different target
+    - Maintain **multiple versions** of your API
+  - **Configuration**
+    - **Resources**
+      - When you create an API you need to also create multiple resources
+      - Resources are the URLs you define (e.g. /projects)
+      - Resources can have child resources (e.g. /projects/-id-/edit)
+        - NOTE: the -id- above is a place holder variable
+    - **Methods**
+      - You need to define methods on resources (e.g. GET, POST, DELETE)
+      - Methods have a many-to-one relationship to resources
+      - Methods allow you to make API calls that resource URL with that protocol
+      - When you create an API method you need to choose the Integration type (most common is Lambda)
+      - You can choose the behavior both as the method request comes in and goes out
+      - You can require authorization to your API via AWS Cognito or a custom Lambda
+    - **Stages**
+      - In order to use your API you need to Deploy it to Stages
+      - Stages are versions of your API
+      - Often you will have stages for different levels of the deployment process: Development, QA, Beta/Testing, Production
+    - **Invoke URL**
+      - For each stage AWS provides you an Invoke URL, although it is possible to use a custom domain
+      - This is where you'll send your API calls
+    - **Deploy API**
+      - Every time you finalize changes to your API that you would like to publish you must use the Deploy API action
+    - **Caching**
+      - API Caching can be enabled to cache your endpoint's response to API calls
+      - When enabled, it caches responses from the API Gateway for a specified Time-to-Live (TTL) period
+      - When enabled, the Gateway responds by looking up the response from the cache (instead of making a request to the endpoint). This reduces the number of endpoint calls (saving money) and improves latency
+    - **Cross-Origin Resource Sharing (CORS)**
+      - This is a way that a server at the other end (not client code in the browser) can relax a same-origin policy.
+      - Allows restricted resources (i.e. fonts) on a webpage to be requested from a **different domain than the initial resource** that it came from
+      - Should always be enabled if using JavaScript/AJAX that uses multiple domains with an API gateway
+      - CORS is **always** enforced by the client
+      - Can be enabled on all or individual endpoints
+  - **Same Origin Policy** is a concept in the application security model where a web browser permits scripts contained in a first webpage to access data in a second webpage.
+    - Same Origin Policies are used to help prevent Cross-Site Scripting (XSS) attacks.
+    - They only work if both webpages have the same origin.
+    - They are enforced at the web browser level.
+    - They ignore tools such as Postman or Curl.
+  
+## Kinesis
+  - Fully managed solution for **collecting**, **processing**, and **analyzing streaming data** in the cloud (e.g. stock prices, game data, social network data, click stream data).
+  - When you need **"real time"** think Kinesis.
+  - Four different kinds of Kinesis Streams: **Data Streams**, **Firehose Delivery Streams**, **Video Streams**, **Data Analytics**
+  - **Kinesis Data Streams**
+    - Producers send data to the stream where it's processed in shards and sent out to consumers.
+    - You pay per running shard.
+    - You can have multiple consumers which you must manually configure/code.
+    - Data can be persisted from **24 hours (default)** to **168 hours (max)** before it disappears from the stream.
+  - **Kinesis Firehose Delivery Stream**
+    - You choose **one consumer** from a predefined list (it focuses the stream, like a firehose).
+    - Data **immediately disappears** once it is consumed (there is **no data retention**).
+    - You can convert incoming data to a few other file formats, compress, and secure the data.
+    - You pay dependent on how much data is ingested (very cheap compared to other options).
+  - **Kinesis Video Streams**
+    - Securely retain video and audio encoded data.
+    - Ingest video and audio encoded data from various devices and or service.
+    - Output video data to ML or video processing services.
+  - **Kinesis Data Analytics**
+    - You can specify a Firhose or Data Stream as an input and as an output.
+    - Data is run through a **custom SQL query** you provide and the result is sent to the output stream.
+    - This allows for real-time analytics of your data.
+  - Kinesis Producer Library (KPL) is a Java library to write data to a stream.
+  - You can write data to a stream using the AWS SDK, but KPL is more efficient.
+  
+## Storage Gateway
+  - Connects an on-premises software appliance with cloud-based storage (hybrid storage solution).
+  - Securely store your data to the AWS Cloud for **scalable** and **cost effective** storage.
+  - Software appliance is available as a **virtual machine (VM) image**.
+  - Supports both **VMware ESXi** and **Microsoft Hyper-V**.
+  - Once installed and activated, you can use the **AWS Console** to create your gateway.
+  - There are three types of gateways: **File Gateway**, **Volume Gateway**, and **Tape Gateway**.
+  - **File Gateway**
+    - Uses NFS or SMB to treat S3 like NAS storage.
+    - Stores your files in S3 with a local cache for low-latency access to your most recently used data.
+    - Ownership, permissions, and timestamps are all stored within **S3 metadata** of the object that holds the file.
+    - Once the file is transferred, it can be managed as a **native S3 object**.
+    - **Bucket Policies**, **Versioning**, **Lifecycle Management**, and **Cross-Region Replication** apply directly to files stored in your bucket.
+  - **Volume Gateway**
+    - Presents your applications with disk volumes using the **Internet Small Computer Systems Interface (iSCSI)** block protocol.
+    - Asynchronously backs up copies of your hard disk drives in S3 as **point-in-time EBS snapshots**.
+    - **Snapshots** are incremental backups that caputer only changed blocks in the volume.
+    - All stored snapshots are also **compressed** to help minimize storage charges.
+    - Comes in two variants: **Stored Volumes** and **Cached Volumes**
+    - **Stored Volumes**
+      - Primary data is **stored locally** while **asynchronously backing up** that data to AWS.
+      - On-premise applications still have low-latency access to their full datasets and a durable backup is kept on AWS.
+      - Create storage volumes and **mount them as iSCSI devices** from your on-premises server.
+      - Any data written to stored volumes is **stored on your on-presmises** storage hardware, while snapshots are backed up to S3.
+      - Stored Volumes can be between **1GB and 16TB** in size.
+    - **Cached Volumes**
+      - Uses **S3 to store your primary data storage** while **retaining frequently accessed data locally** in your storage gateway.
+      - Minimizes need to scale up your on-premises storage infrastructure (to keep copies of all of the data), but still provides low-latency access (as though still on-premises) to the most frequently used data.
+      - Create storage volumes up to 32TB in size and attach them as iSCSI devices from your on-premises servers.
+      - Cached Volumes can be between **1GB - 32GB** in size.
+  - **Tape Gateway**
+    - Backs up tape data as **virtual tape cartridges** in a **Virtual Tape Library (VTL)** in S3 Glacier storage.
+    - The VTL interace lets you use existing tape-based backup application infrastructure.
+    - Each tape gateway is **pre-configured with a media changer and tape drives** which are presented to your existing client backup applications as iSCSI devices.
+    - Supported by **NetBackup**, **Backup Exec**, and **Veeam**.
