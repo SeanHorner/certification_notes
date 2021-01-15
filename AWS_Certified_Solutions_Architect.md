@@ -1,4 +1,7 @@
 # AWS Certified Solutions Architect Notes
+Made from the tutorial at: https://www.youtube.com/watch?v=Ia-UEYYR44s&list=WL&index=5&t=5233s
+Lots of good practicals there too.
+
 
 ## S3 - Simple Storage Service
   - Object-based storage. Store virtually unlimited amounts of data without worrying about the underlying storage infrastructure.
