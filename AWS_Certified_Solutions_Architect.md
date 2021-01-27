@@ -72,141 +72,141 @@ Lots of good practicals there too.
 
 ## Virtual Private Cloud (VPC)
 
-### Core Components
-  - Internet Gateway (IGW)
-  - Virtual Private Gateway (VPN Gateway)
-  - Routing Tables
-  - Network Access Control Lists (NACLs)
-  - Security Groups (SG)
-  - Public Subnets
-  - Private Subnets
-  - NAT Gateway
-  - Customer Gateway
-  - VPC EndPoints
-  - VPC Peering
-### Key Features
-  - VPCs are Region Specific, they do not span regions.
-  - You can create up to 5 VPCs per region.
-  - Every region, by default, gives you one VPC (it's necessary to set up EC2s).
-  - You can have 200 subnets per VPC
-  - You can use IPv4 CIDR Block and IPv6 CIDR Block for addresses in the VPC.
-  - Some VPCs items cost nothing to implement:
-    - VPCs, Route Tables, NACLs, Internet Gateways, Security Groups, Subnets, VPC Peering
-  - Some pieces do cost to implement:
-    - NAT Gateway, VPC Endpoints, VPN Gateway, Customer Gateways
-  - DNS Hostnames (if your instances have domain name addresses).
-### Default VPC
-  - AWS always sets up a default VPC in every region were you activate any services so you can immediately deploy instances.
-  - It has a size /16 IPv4 CIDR Block.
-  - It has a size /20 default subnet in each Availability Zone.
-  - It creates an Internet Gateway to connect your VPC to the internet.
-  - It creates a default security group.
-  - Creates a default NACL.
-  - Associates the default DHCP options set in your AWS account.
-  - Automatically creates a main route table.
-### Default IP
-  - The address 0.0.0.0/0 is known as the default IP address and it represents all possible IP addresses.
-  - When 0.0.0.0/0 is in the Internet Gateway's Route Table, it will allow all traffic to the internet.
-  - When 0.0.0.0/0 is in the security group's inbound rules, it will allow all traffic from anywhere on the internet.
-### VPC Peering
-  - Allows the direct connection of traffic from one VPC to another ("making them peers").
-  - Peerage is not transitive (If VPC A is a peer of B, and B is a peer of C, that doesn't mean A is a peer of C).
-  - Peering uses a star configuration: 1 central VPC, 4 axial VPCs.
-  - There cannot be overlapping CIDR blocks (ip addresses have to be unique).
-### Route Tables
-  - Route tables are used to direct network traffic to the appropriate endpoints.
-  - Each subnet must be associated with a Route Table.
-  - Subnets can only be associated with one Route Table at a time, but Route Tables can be associated with many subnets.
-### Internet Gateway (IGW)
-  - The IGW is your VPC's portal to accessing the wide Internet.
-  - IGW's perform two functions:
-    - 1: They provide targets for internet addressed traffic from within your VPC.
-    - 2: They perform network access translation (NAT) for publicly avaialble instances.
-  - To route out to the internet you must add the IGW-id as a target with 0.0.0.0/0 as the destination in your Route Table.
-### Bastion/Jumpbox
-  - Bastions are EC2s located in a public subnet that can be used to SSH or RCP into EC2s protected inside a private subnet.
-  - Bastions are also known as Jumpboxes since you jump from one box to another.
-  - System Manager's Session Manager replaces the need for Bastions.
-  - Note NAT Gateways are for outbound traffic only and should never be used as Bastions.
-### Direct Connect
-  - Direct Connect provides a direct connection between on-premises locations (offices and data centers) to the AWS backbone.
-  - It comes as a Lower Bandwidth (50M - 500M) and Higher Bandwidth (1 GB or 10 GB) speeds.
-  - It provides a cheaper and more consistent (i.e. reliable and secure) connection than connecting through the public internet.
-### VPC Endpoints
-  - VPC Endpoints allow you to privately connect a VPC to other AWS services (i.e. traffic stays inside of AWS).
-  - Instances do not need a public IP address to communicate with other AWS resources.
-  - They are horizontally-scaled, redundant, and highly available VPC component.
-  - Eliminates the need for an Internet Gateway, NAT device, VPN connection, or AWS Direct Connection.
-  - Comes in two varieties:
-    - 1: Interface Endpoints
-    - 2: Gateway Endpoints
-### Interface Endpoints
-  - Interface Endpoints are Elastic Network Interfaces (ENI) with a private IP address which serve as an entry point for traffic.
-  - Powered by AWS PrivateLink.
-  - Supports the following services:
-      - API Gateway, CloudFormation, CloudWatch, Kinesis, SageMaker, Codebuild, AWS Config, EC2 API, ELB API, AWS KMS, Secrets Manager, Security Token Service, Service Catalog, SNS, SQS,Systems Manager, Marketplace Partner Services,Endpoint Services in other AWS accounts.
-  - Pricing is: $0.01/hr pr VPC Endpoint per AZ; $0.01/GB data processed.
-### Gateway Endpoints
-  - A Gateway Endpoint is a gateway that is a target for a specific route in your Route Table.
-  - Only supports Amazon S3 and DynamoDB.
-  - VPC Gateway Endpoints are free.
-### VPC Flow Logs
-  - Allow you to capture IP traffic information in and out of network interfaces inside of your VPC.
-  - They are set up within the VPC options.
-  - They have three levels of specificity:
-    - 1: Entire VPC
-    - 2: Specific Subnets
-    - 3: Specific Network Interfaces
-  - Higher levels cascade to lower ones (e.g. level 1 logs the same as level 2 and 3 and more and level 2 logs the same as level 3).
-  - You cannot change the configuration of a flow log after it's created.
-  - VPC Flow Logs cannot be taged like other AWS resources.
-  - You cannot enable flow logs for VPCs which are peered with your VPC unless it is in the same account.
-  - VPC Flow Logs can be delivered to an S3 or CloudWatch Logs.
-  - VPC Flow Logs contains the source and destination **IP addresses** (not hostnames).
-  - Some instance traffic is not monitored:
-    - Instance traffic generated by contacting the AWS DNS servers
-    - Windows lisence activation traffic from instances
-    - Traffic to and from the instance metadata address (169.254.169.254)
-    - DHCP Traffic
-    - Any traffic to the reserved IP address of the default VPC router
-### Network Access Control List (NACL)
-  - VPCs are automatically given a default NACL which allows **all** outbound and inbound traffic.
-  - Each subnet within a VPC must be associated with a NACL.
-  - Subnets can only be associated with 1 NACL at a time. Associating a subnet with a new NACL will break the previous association.
-  - If no NACL is not explicitly associated with a subnet, the subnet will automatically be associated with the default NACL.
-  - NACLs have inbound and outbound rules (just like Security Groups) but NACLs can either allow or deny traffic (whereas SGs can only have rules that allow traffic).
-  - NACLs are **stateless**, meaning any traffic allowed in is also allowed out.
-  - By default, when first created NACLs are set to deny all traffic.
-  - NACLs contain a numbered list of rules that get evaluated in order from lowest to highest, the first rule pertinent to the specific traffic is applied.
-  - If you need to blacklist a single IP address, you could do so via the NACL (SGs cannot deny traffic).
-### Security Groups
-  - Security Groups act as a firewall at the instance level.
-  - Unless allowed specifically, all inbound traffic is blocked by default.
-  - All outbound traffic from the instance is allowed by default.
-  - You can specify for the source address to either be an IP range, a single IP address, or another Security Group.
-  - Security Groups are **stateful** (if traffic is allowed inbound, it is also allowed outbound; no need for the SG to recheck it, it remembers the packet).
-  - Any changes to a Security Group take effect immediately.
-  - EC2 instances can belong to multiple security groups.
-  - Security groups can contain multiple EC2 instances.
-  - You cannot block specific IP addresses with a Security Group; they cannot have deny rules, only allow rules.
-  - You can have up to 10,000 Security Groups per Region (default is 2,500).
-  - You can have 60 inbound and 60 outbound rules per Security Group.
-  - Security Groups can be nested (i.e. a Security Group protecting some assets inside a larger Security Group containing even more assets).
-  - You can have 16 Security Groups associated to an Elastic Network Interface (ENI) (default is 5).
-### Network Address Translation (NAT) Instances and Gateways
-  - When creating a NAT instance, you **must disable source and destination checks** on the instance.
-  - NAT instances **must exist in a publin subnet**.
-  - You must have a route out of the private subnet to the NAT instance.
-  - The size of a NAT instance determines how much traffic it can handle.
-  - High availability can be achieved using Autoscaling Groups, multiple subnets in different AZs, and automate failover between them using a script
-  - NAT Gateways are redundant inside an Availability Zone (can survive the failure of an EC2 instance).
-  - You can only have 1 NAT Gateway inside 1 Availability Zone (cannot span AZs).
-  - Starts at 5 Gbps and scales all the way up to 45 Gbps.
-  - NAT Gateways are the preferred setup for enterprise systems.
-  - There is no requirement to patch NAT Gateways, and there is no need to disable Source/Destination checks for the NAT Gateway (as there is with Nat Instances).
-  - NAT Gateways are automatically assigned a public IP address.
-  - Route Tables for the NAT Gateway **must** be updated.
-  - Resources in multiple AZs sharing a Gateway will lose internet access if the Gateway goes down, unless you create a Gateway in each AZ and configure route tables accordingly.
+  - **Core Components**
+    - Internet Gateway (IGW)
+    - Virtual Private Gateway (VPN Gateway)
+    - Routing Tables
+    - Network Access Control Lists (NACLs)
+    - Security Groups (SG)
+    - Public Subnets
+    - Private Subnets
+    - NAT Gateway
+    - Customer Gateway
+    - VPC EndPoints
+    - VPC Peering
+  - **Key Features**
+    - VPCs are Region Specific, they do not span regions.
+    - You can create up to 5 VPCs per region.
+    - Every region, by default, gives you one VPC (it's necessary to set up EC2s).
+    - You can have 200 subnets per VPC
+    - You can use IPv4 CIDR Block and IPv6 CIDR Block for addresses in the VPC.
+    - Some VPCs items cost nothing to implement:
+      - VPCs, Route Tables, NACLs, Internet Gateways, Security Groups, Subnets, VPC Peering
+    - Some pieces do cost to implement:
+      - NAT Gateway, VPC Endpoints, VPN Gateway, Customer Gateways
+    - DNS Hostnames (if your instances have domain name addresses).
+  - **Default VPC**
+    - AWS always sets up a default VPC in every region were you activate any services so you can immediately deploy instances.
+    - It has a size /16 IPv4 CIDR Block.
+    - It has a size /20 default subnet in each Availability Zone.
+    - It creates an Internet Gateway to connect your VPC to the internet.
+    - It creates a default security group.
+    - Creates a default NACL.
+    - Associates the default DHCP options set in your AWS account.
+    - Automatically creates a main route table.
+  - **Default IP**
+    - The address 0.0.0.0/0 is known as the default IP address and it represents all possible IP addresses.
+    - When 0.0.0.0/0 is in the Internet Gateway's Route Table, it will allow all traffic to the internet.
+    - When 0.0.0.0/0 is in the security group's inbound rules, it will allow all traffic from anywhere on the internet.
+  - **VPC Peering**
+    - Allows the direct connection of traffic from one VPC to another ("making them peers").
+    - Peerage is not transitive (If VPC A is a peer of B, and B is a peer of C, that doesn't mean A is a peer of C).
+    - Peering uses a star configuration: 1 central VPC, 4 axial VPCs.
+    - There cannot be overlapping CIDR blocks (ip addresses have to be unique).
+  - **Route Tables**
+    - Route tables are used to direct network traffic to the appropriate endpoints.
+    - Each subnet must be associated with a Route Table.
+    - Subnets can only be associated with one Route Table at a time, but Route Tables can be associated with many subnets.
+  - **Internet Gateway (IGW)**
+    - The IGW is your VPC's portal to accessing the wide Internet.
+    - IGW's perform two functions:
+      - 1: They provide targets for internet addressed traffic from within your VPC.
+      - 2: They perform network access translation (NAT) for publicly avaialble instances.
+    - To route out to the internet you must add the IGW-id as a target with 0.0.0.0/0 as the destination in your Route Table.
+  - **Bastion/Jumpbox**
+    - Bastions are EC2s located in a public subnet that can be used to SSH or RCP into EC2s protected inside a private subnet.
+    - Bastions are also known as Jumpboxes since you jump from one box to another.
+    - System Manager's Session Manager replaces the need for Bastions.
+    - Note NAT Gateways are for outbound traffic only and should never be used as Bastions.
+  - **Direct Connect**
+    - Direct Connect provides a direct connection between on-premises locations (offices and data centers) to the AWS backbone.
+    - It comes as a Lower Bandwidth (50M - 500M) and Higher Bandwidth (1 GB or 10 GB) speeds.
+    - It provides a cheaper and more consistent (i.e. reliable and secure) connection than connecting through the public internet.
+  - **VPC Endpoints**
+    - VPC Endpoints allow you to privately connect a VPC to other AWS services (i.e. traffic stays inside of AWS).
+    - Instances do not need a public IP address to communicate with other AWS resources.
+    - They are horizontally-scaled, redundant, and highly available VPC component.
+    - Eliminates the need for an Internet Gateway, NAT device, VPN connection, or AWS Direct Connection.
+    - Comes in two varieties:
+      - 1: Interface Endpoints
+      - 2: Gateway Endpoints
+  - **Interface Endpoints**
+    - Interface Endpoints are Elastic Network Interfaces (ENI) with a private IP address which serve as an entry point for traffic.
+    - Powered by AWS PrivateLink.
+    - Supports the following services:
+      - API Gateway, CloudFormation, CloudWatch, Kinesis, SageMaker, Codebuild, AWS Config, EC2 API, ELB API, AWS KMS, Secrets Manager, Security Token Service, Service Catalog, SNS, SQS,  Systems Manager, Marketplace Partner Services,Endpoint Services in other AWS accounts.
+    - Pricing is: $0.01/hr per VPC Endpoint per AZ; $0.01/GB data processed.
+  - **Gateway Endpoints**
+    - A Gateway Endpoint is a gateway that is a target for a specific route in your Route Table.
+    - Only supports Amazon S3 and DynamoDB.
+    - VPC Gateway Endpoints are free.
+  - **VPC Flow Logs**
+    - Allow you to capture IP traffic information in and out of network interfaces inside of your VPC.
+    - They are set up within the VPC options.
+    - They have three levels of specificity:
+      - 1: Entire VPC
+      - 2: Specific Subnets
+      - 3: Specific Network Interfaces
+    - Higher levels cascade to lower ones (e.g. level 1 logs the same as level 2 and 3 and more and level 2 logs the same as level 3).
+    - You cannot change the configuration of a flow log after it's created.
+    - VPC Flow Logs cannot be taged like other AWS resources.
+    - You cannot enable flow logs for VPCs which are peered with your VPC unless it is in the same account.
+    - VPC Flow Logs can be delivered to an S3 or CloudWatch Logs.
+    - VPC Flow Logs contains the source and destination **IP addresses** (not hostnames).
+    - Some instance traffic is not monitored:
+      - Instance traffic generated by contacting the AWS DNS servers
+      - Windows lisence activation traffic from instances
+      - Traffic to and from the instance metadata address (169.254.169.254)
+      - DHCP Traffic
+      - Any traffic to the reserved IP address of the default VPC router
+  - **Network Access Control List (NACL)**
+    - VPCs are automatically given a default NACL which allows **all** outbound and inbound traffic.
+    - Each subnet within a VPC must be associated with a NACL.
+    - Subnets can only be associated with 1 NACL at a time. Associating a subnet with a new NACL will break the previous association.
+    - If no NACL is not explicitly associated with a subnet, the subnet will automatically be associated with the default NACL.
+    - NACLs have inbound and outbound rules (just like Security Groups) but NACLs can either allow or deny traffic (whereas SGs can only have rules that allow traffic).
+    - NACLs are **stateless**, meaning any traffic allowed in is also allowed out.
+    - By default, when first created NACLs are set to deny all traffic.
+    - NACLs contain a numbered list of rules that get evaluated in order from lowest to highest, the first rule pertinent to the specific traffic is applied.
+    - If you need to blacklist a single IP address, you could do so via the NACL (SGs cannot deny traffic).
+  - **Security Groups**
+    - Security Groups act as a firewall at the instance level.
+    - Unless allowed specifically, all inbound traffic is blocked by default.
+    - All outbound traffic from the instance is allowed by default.
+    - You can specify for the source address to either be an IP range, a single IP address, or another Security Group.
+    - Security Groups are **stateful** (if traffic is allowed inbound, it is also allowed outbound; no need for the SG to recheck it, it remembers the packet).
+    - Any changes to a Security Group take effect immediately.
+    - EC2 instances can belong to multiple security groups.
+    - Security groups can contain multiple EC2 instances.
+    - You cannot block specific IP addresses with a Security Group; they cannot have deny rules, only allow rules.
+    - You can have up to 10,000 Security Groups per Region (default is 2,500).
+    - You can have 60 inbound and 60 outbound rules per Security Group.
+    - Security Groups can be nested (i.e. a Security Group protecting some assets inside a larger Security Group containing even more assets).
+    - You can have 16 Security Groups associated to an Elastic Network Interface (ENI) (default is 5).
+  - **Network Address Translation (NAT) Instances and Gateways**
+    - When creating a NAT instance, you **must disable source and destination checks** on the instance.
+    - NAT instances **must exist in a publin subnet**.
+    - You must have a route out of the private subnet to the NAT instance.
+    - The size of a NAT instance determines how much traffic it can handle.
+    - High availability can be achieved using Autoscaling Groups, multiple subnets in different AZs, and automate failover between them using a script
+    - NAT Gateways are redundant inside an Availability Zone (can survive the failure of an EC2 instance).
+    - You can only have 1 NAT Gateway inside 1 Availability Zone (cannot span AZs).
+    - Starts at 5 Gbps and scales all the way up to 45 Gbps.
+    - NAT Gateways are the preferred setup for enterprise systems.
+    - There is no requirement to patch NAT Gateways, and there is no need to disable Source/Destination checks for the NAT Gateway (as there is with Nat Instances).
+    - NAT Gateways are automatically assigned a public IP address.
+    - Route Tables for the NAT Gateway **must** be updated.
+    - Resources in multiple AZs sharing a Gateway will lose internet access if the Gateway goes down, unless you create a Gateway in each AZ and configure route tables accordingly.
  
 ## Identity Access Managment (IAM)
   - IAM is used to manage access to unsers and resources.
@@ -399,7 +399,7 @@ Lots of good practicals there too.
       - Scaling Policies with Steps: Scales when an alarm is breached, can excalate based on alarm value changing.
   - ELB Integration: ELBs can be integrated with ASG to get richer health checks. They are divided into Classic Load Balancers (CLBs) which can be linked directly, or Application Load Balancers (ALBs) and Network Load Balancers (NLB) which must be linked through defining a target group.
   - Launch Configurations: Essentially like setting up an instance to be launched, but it saves the options to launch needed EC2s when needed.
-  - When an ASG launches a new instance it uses a Launch Configuration which holds teh configuration values for that new instance (e.g. AMI, InstanceType, Role).
+  - When an ASG launches a new instance it uses a Launch Configuration which holds the configuration values for that new instance (e.g. AMI, InstanceType, Role).
   - Launch Configurations cannot be edited and must be cloned or a new one created to make changes.
   - Launch Configurations must be manually updated by editing the Auto Scaling settings.
 
@@ -416,6 +416,8 @@ Lots of good practicals there too.
   - You can attach Amazon Certification Manager SSL to any of the ELBs for SSL.
   - ALB has advanced Request Routing rules where you can route based on subdomain header, path, and other HTTP(S) information.
   - Sticky Sessions can be enabled for CLB or ALB and sessions are remembered via Cookie.
+  - **Perfect Forward Secrecy** is a feature that provides additional safeguards against eavesdropping of encrypted data, through the use of aunique random session key.
+  - **Server Order Preference** lets you configure the load balancer to enforce cipher ordering, providing more control over the level of security used by clients to connect with your load balancer.
 
 ## Elastic File System (EFS)
   - EFS supports the Network File System version 4 (NFSv4) protocol.
@@ -439,6 +441,18 @@ Lots of good practicals there too.
   - **EBS Volumes** are a durable, block-level storage device that you can attach to a single EC2 instance.
   - **EBS Volumes** can be modified on the fly, e.g. storage type or volume size.
   - Volumes always exist in the same AZ as the EC2 instance.
+  - There are two categories of EBS volumes: **Soild State Drives (SSDs)** and **Hard Disk Drives (HDDs)**
+  - **Solid State Drives**
+    - Soild state drives use flash memory and are therefore extremely quick.
+    - All types of SSDs can be used as boot volumes.
+    - There are two categories of solid state drives: **General Purpose SSDs** and **Provisioned IOPS SSDs**
+    - **General Purpose SSDs**
+      - This category breaks down into two types: **gp2** and **gp3**
+      - Both types (gp2 and gp3) have a **durability of 99.8-99.9%**, they can be between **1 GiB - 16 TiB**, maximum IOPS per volume is **16,000**, and they are best used for low-latency interactive apps and development and test environments.
+      - gp2 has a maximum throughput per volume of **250 MiB/s**, gp3 has a max of **1000 MiB/s**
+    - **Provisioned IOPS SSDs**
+      - This category breaks down into three types: **io1**, **io2**, and **io2 Block Express**
+      - 
   - **Instance Store Volumes** are a temporary storage type located on disks that are physically attached to a host machine.
   - **Instance Store Volumes** are ephemeral and cannot be stopped. If the host fails then you lose your data.
   - EBS Backed Instances can be stopped and you will not lose any data.
@@ -461,6 +475,7 @@ Lots of good practicals there too.
   - **Origin Identity Access (OAI)** is used to access private S3 buckets.
   - Access to cached content can be protected via **Signed URLs** or **Signed Cookies**.
   - **Lambda@Edge** allows you to pass each request through a Lambda to change the behaviour of the response.
+  - Cloud Front can also use **Perfect Forward Security**, **Session Tickets**, and **OCSP Stapling**.
 
 ## Relational Database Service (RDS)
   - RDS is the AWS Solution for relational databases.
@@ -471,6 +486,7 @@ Lots of good practicals there too.
   - Read-Replicas allow you to run **multiple copies** of your database, these copies allow more read traffic by sharing the load with the primary, but writes go exclusively to the primary and are then disseminated to the replicas.
   - Read-Replicas use Asynchronous replication, i.e. they are not perfectly in-sync with the primary, the writes are replicated when the primary has a free moment to disseminate them.
   - You must have automatic backups enabled to use Read Replicas.
+  - 
 
 ## Aurora Database
   - When you need a **fully-managed** Postgres or MySQL database that needs to scale, automatic backups, high availability, and fault tolerance *think* Aurora.
@@ -686,6 +702,10 @@ Lots of good practicals there too.
       - **Platform application endpoints** are mobile push notifications (e.g. Apple, Google, Microsoft Baidu)
   - **Application as Subscriber** is a paradigm where the Platform application endpoint method is used to push events to applications.
 
+## Amazon Messaging Queue (MQ)
+  - Amazon MQ is a managed message broker that is good for moving an already in use messaging service to the cloud quickly and easily.
+  - Supports industry-standard APIs and protocols so you can switch from and standards-based message broker to Amazon MQ without rewriting the messaging code in an application.
+
 ## ElastiCache
   - Managed **caching** service which either runs Redis or Memcached
   - Caching is the process of storing data in a cache and a cache is a **temporary storage** area. Caches are optimized for fast retrieval with the trade off that data is not durable.
@@ -846,3 +866,8 @@ Lots of good practicals there too.
     - The VTL interace lets you use existing tape-based backup application infrastructure.
     - Each tape gateway is **pre-configured with a media changer and tape drives** which are presented to your existing client backup applications as iSCSI devices.
     - Supported by **NetBackup**, **Backup Exec**, and **Veeam**.
+
+## Amazon Macie
+  - A machine-learning powered security service that helps prevent data loss by automatically discovering, classifying, and protecting sensitive data stored in Amazon S3.
+  - Good for identifying **Personally Identifiable Information (PII)** and **Intellectual Property (IP)**.
+  - Has the ability to detect global access permissions inadvertently being set on sensitive data, detect uploading of API keys inside source code, and verify sensitive customer data is being stored and accessed in a manner that meets compliance standards.
